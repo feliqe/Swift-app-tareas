@@ -8,54 +8,70 @@
 import SwiftUI
 import SwiftData
 
+/* VISTA INICIAL*/
 struct ContentView: View {
-    @Environment(\.modelContext) private var modelContext
-    @Query private var items: [Item]
-
+    
+// traemos la informacion para interar en la base de datos
+    @Environment(\.modelContext) private var context
+    @Query private var tareas: [Tareas]
+    @State private var showAdd = false
+    
     var body: some View {
-        NavigationSplitView {
-            List {
-                ForEach(items) { item in
-                    NavigationLink {
-                        Text("Item at \(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))")
-                    } label: {
-                        Text(item.timestamp, format: Date.FormatStyle(date: .numeric, time: .standard))
-                    }
+        NavigationStack {
+            VStack {
+                
+                //  validacion si no hay tarea muestra el siguiente mensajes
+                if tareas.isEmpty {
+                    ContentUnavailableView("No hay tareas",
+                                           systemImage: "list.bullet.clipboard",
+                                           description: Text("Aún no existen tareas en la app. Por favor, pulse el + arriba a la derecha para crear una nueva tarea."))
+                    Spacer()
+                    
+                    //  si hay tareas para mostrar entonces ejecuta la vista de main
+                } else {
+                    main
                 }
-                .onDelete(perform: deleteItems)
             }
+            .navigationTitle("Tareas")
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    EditButton()
-                }
-                ToolbarItem {
-                    Button(action: addItem) {
-                        Label("Add Item", systemImage: "plus")
+                
+                // muestra para el + de crear tarea
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        
+                        // toggle = nos cambia a verdadero
+                        showAdd.toggle()
+                        // estilo del boton +
+                    } label: {
+                        Image(systemName: "plus")
                     }
                 }
             }
-        } detail: {
-            Text("Select an item")
+        }
+        .fullScreenCover(isPresented: $showAdd) {
+            // llamada al formulario de crear una nueva tarea
+            NewTaskView()
         }
     }
-
-    private func addItem() {
-        withAnimation {
-            let newItem = Item(timestamp: Date())
-            modelContext.insert(newItem)
-        }
-    }
-
-    private func deleteItems(offsets: IndexSet) {
-        withAnimation {
-            for index in offsets {
-                modelContext.delete(items[index])
+    
+    var main: some View {
+        // se lista los datos guardados
+        List {
+            // busca y muestra la informcion del la fucnion de TaskRow
+            ForEach(tareas) { tarea in
+                TaskRow(tarea: tarea)
+            }
+            // opcion de deslisado para eliminar
+            .onDelete { index in
+                for i in index {
+                    context.delete(tareas[i])
+                }
             }
         }
     }
 }
 
-#Preview {
+// traits: .sampleData =  cargamos los datos de prueba de sampleDAta
+#Preview(traits: .sampleData) {
     ContentView()
-        .modelContainer(for: Item.self, inMemory: true)
 }

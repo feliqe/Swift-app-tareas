@@ -11,18 +11,20 @@ import SwiftData
 @main
 struct swift_app_taskApp: App {
     var sharedModelContainer: ModelContainer = {
-        let schema = Schema([
-            Item.self,
-        ])
+        
+// indicamos el esquema del modelo
+        let schema = Schema([Tareas.self])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
-
+        
+// validamos la conexion
         do {
             return try ModelContainer(for: schema, configurations: [modelConfiguration])
         } catch {
             fatalError("Could not create ModelContainer: \(error)")
         }
     }()
-
+    
+// retornamos la configuracion
     var body: some Scene {
         WindowGroup {
             ContentView()
